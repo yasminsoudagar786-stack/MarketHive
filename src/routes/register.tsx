@@ -25,12 +25,11 @@ export const Route = createFileRoute("/register")({
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const setAuth = useAuth((s) => s.setAuth);
   const form = useForm<V>({ resolver: zodResolver(schema), defaultValues: { role: "customer" } });
   const role = form.watch("role");
   const m = useMutation({
     mutationFn: registerUser,
-    onSuccess: ({ token, user }) => { setAuth(token, user); toast.success("Account created"); navigate({ to: user.role === "vendor" ? "/vendor/onboarding" : "/" }); },
+    onSuccess: () => { toast.success("Account created. Please log in."); navigate({ to: "/login" }); },
     onError: (e: Error) => toast.error(e.message),
   });
   const err = form.formState.errors;
