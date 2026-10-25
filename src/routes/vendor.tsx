@@ -1,7 +1,8 @@
-import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, ShoppingBag } from "lucide-react";
+import { createFileRoute, Link, Navigate, Outlet, useLocation } from "@tanstack/react-router";
+import { LayoutDashboard, MessageSquare, Package, ShoppingBag, Ticket, Wallet } from "lucide-react";
 import { ProtectedRoute } from "@/components/Protected";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/stores/auth";
 
 export const Route = createFileRoute("/vendor")({
   head: () => ({ meta: [{ title: "Vendor dashboard — MarketHive" }] }),
@@ -12,14 +13,24 @@ export const Route = createFileRoute("/vendor")({
   ),
 });
 
-// More links get added here as we build more vendor pages (products, payouts, ...).
 const NAV = [
   { to: "/vendor", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/vendor/products", label: "Products", icon: Package, exact: false },
   { to: "/vendor/orders", label: "Orders", icon: ShoppingBag, exact: false },
+  { to: "/vendor/payouts", label: "Payouts", icon: Wallet, exact: false },
+  { to: "/vendor/reviews", label: "Reviews", icon: MessageSquare, exact: false },
+  { to: "/vendor/coupons", label: "Coupons", icon: Ticket, exact: false },
 ] as const;
 
 function VendorLayout() {
   const pathname = useLocation({ select: (l) => l.pathname });
+  const user = useAuth((s) => s.user);
+
+  // A signed-in vendor with no store yet must finish onboarding first.
+  if (user && !user.vendorId && !pathname.startsWith("/vendor/onboarding")) {
+    return <Navigate to="/vendor/onboarding" replace />;
+  }
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:gap-8">
       <aside className="md:w-56 md:shrink-0">

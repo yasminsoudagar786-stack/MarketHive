@@ -23,7 +23,12 @@ function ThemeToggle() {
 
 function useSignOut() {
   const qc = useQueryClient(); const navigate = useNavigate(); const logout = useAuth((s) => s.logout);
-  return () => { qc.clear(); logout(); navigate({ to: "/login", replace: true }); };
+  return async () => {
+    // Go to the login page first, then clear the session, so no other redirect can fight this one.
+    await navigate({ to: "/login", replace: true });
+    logout();
+    qc.clear();
+  };
 }
 
 export function Header() {

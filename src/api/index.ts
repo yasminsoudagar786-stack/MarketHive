@@ -216,3 +216,26 @@ export const getAdminStats = () =>
     : get<never>("/admin/analytics");
 
 export const getUsers = (): Promise<User[]> => (USE_MOCK ? mock(() => getDb().users.map(strip), { failRate: 0 }) : get("/admin/users"));
+
+// ---------- Vendor onboarding (paste at the very bottom of src/api/index.ts) ----------
+export const createVendor = (input: {
+  userId: string; name: string; description: string; gstin: string; pan: string;
+  accountHolder: string; bankName: string; accountNumber: string; ifsc: string; logo?: string;
+}): Promise<Vendor> =>
+  USE_MOCK
+    ? mock(() => {
+        const db = getDb();
+        const id = `v${db.vendors.length + 1}`;
+        const vendor: Vendor = {
+          id, name: input.name, slug: input.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+          logo: input.logo ?? `https://picsum.photos/seed/logo-${id}/200/200`,
+          banner: `https://picsum.photos/seed/banner-${id}/1400/400`,
+          rating: 0, reviewCount: 0, status: "pending", commissionPct: db.settings.commissionPct,
+          joinedAt: new Date().toISOString(), description: input.description,
+        };
+        db.vendors.push(vendor);
+        const u = db.users.find((x) => x.id === input.userId);
+        if (u) u.vendorId = id;
+        return vendor;
+      }, { failRate: 0 })
+    : post("/vendor/onboarding", input);
